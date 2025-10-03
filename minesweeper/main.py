@@ -7,6 +7,7 @@ Last modified: 2025-09-17
 
 import argparse
 import os
+from config import ConfigScreen
 from game_manager import GameManager
 
 def parse_args():
@@ -17,31 +18,12 @@ def parse_args():
     p.add_argument("--cell-size", type=int, default=32, dest="cell_size")
     return p.parse_args()
 
-def get_mine_count(mines):
-        """
-        get mine count from user input with validation.
-        valid mine count between 10 and 20
-        """
-        while True:
-            try:
-                mine_count = input("Enter number of mines (10-20): ")
-                if not mine_count:
-                    return mines
-                
-                mine_count = int(mine_count)
-                
-                if 10 <= mine_count <= 20:
-                    return mine_count
-                else:
-                    print("Mine count must be between 10 and 20")
-            except ValueError:
-                print("Please enter a valid number")
-
 def main():
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     args = parse_args()
-    mine_count = get_mine_count(args.mines)
-    game = GameManager(width=args.width, height=args.height, num_mines=mine_count, cell_size=args.cell_size)
+    configurer = ConfigScreen()
+    mine_count, alg_complexity, alg_involvement = configurer.run() 
+    game = GameManager(width=args.width, height=args.height, num_mines=mine_count, cell_size=args.cell_size, mode=alg_involvement, difficulty=alg_complexity)
     game.run()
 
 if __name__ == "__main__":

@@ -66,16 +66,16 @@ class BoardAdapter:
 class GameManager:
     """Manager: input -> board mutate -> render."""
     def __init__(self, width: int, height: int , num_mines: int, 
-                 cell_size: int, turn: str="human", mode: str="None", difficulty: str="Easy"):
+                 cell_size: int, turn: str="human", alg_involvement: str="None", difficulty: str="Easy"):
         """
-          Three newly added variables used to track turn/mode/difficulty, currently stored as strs as shown
+          Three newly added variables used to track turn/alg_involvement/difficulty, currently stored as strs as shown
           however this can change just used for easy placeholders for now
           turn: str "human" or "bot"
-          mode: str "interactive" or "noninteractive"
-          difficulty: str "ez", "med", "hard"
+          alg_involvement: str "None", "Assisted", "Full Auto" 
+          difficulty: str "Easy", "Medium", "Hard"
         """
         self.turn = turn
-        self.mode = mode
+        self.alg_involvement = alg_involvement
         self.difficulty = difficulty
         self.board_width = width
         self.board_height = height
@@ -213,7 +213,7 @@ class GameManager:
         updates game state, and renders the game.
         """
         print("The Greatest Game of Minesweeper: LMB=reveal RMB=flag R=restart ESC=quit")
-        if self.mode == "Full Auto":
+        if self.alg_involvement == "Full Auto":
             while self.running:
               self._bot_turn()
               self.update()

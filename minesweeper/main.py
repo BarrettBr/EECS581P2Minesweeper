@@ -23,7 +23,7 @@ def main():
     args = parse_args()
     configurer = ConfigScreen()
     mine_count, alg_complexity, alg_involvement = configurer.run() 
-    game = GameManager(width=args.width, height=args.height, num_mines=mine_count, cell_size=args.cell_size, mode=alg_involvement, difficulty=alg_complexity)
+    game = GameManager(width=args.width, height=args.height, num_mines=mine_count, cell_size=args.cell_size, alg_involvement=alg_involvement, difficulty=alg_complexity)
     game.run()
 
 if __name__ == "__main__":

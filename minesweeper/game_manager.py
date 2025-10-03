@@ -19,6 +19,7 @@ import pygame
 import sys
 import os
 import shutil
+import random
 
 from board import Board, GameState as BoardGameState
 from input_handler import InputHandler
@@ -182,7 +183,50 @@ class GameManager:
         pass
     
     def med_turn(self):
-        pass
+        # Look for safe moves or mines
+        for y in range(self.board.height):
+            for x in range(self.board.width):
+                cell = self.board.get_cell(x, y)
+                if not cell or not cell.revealed or cell.count == 0:
+                    continue
+
+                # Collect neighbors
+                neighbors = [(nx, ny) for nx in range(x-1, x+2)
+                                       for ny in range(y-1, y+2)
+                                       if (nx, ny) != (x, y)
+                                       and 0 <= nx < self.board.width
+                                       and 0 <= ny < self.board.height]
+
+                unrevealed = []
+                flagged = 0
+                for nx, ny in neighbors:
+                    ncell = self.board.get_cell(nx, ny)
+                    if ncell.flagged:
+                        flagged += 1
+                    elif not ncell.revealed:
+                        unrevealed.append((nx, ny))
+
+                # all unrevealed must be mines → flag them
+                if cell.count - flagged == len(unrevealed) and unrevealed:
+                    ux, uy = random.choice(unrevealed)
+                    self.board.toggle_flag(ux, uy)
+                    return  
+
+                # all unrevealed must be safe → reveal one
+                if flagged == cell.count and unrevealed:
+                    ux, uy = random.choice(unrevealed)
+                    self.board.reveal_cell(ux, uy)
+                    return  
+
+        # Random guess (last ditch effort)
+        choices = [(x, y) for y in range(self.board.height)
+                           for x in range(self.board.width)
+                           if not self.board.get_cell(x, y).revealed
+                           and not self.board.get_cell(x, y).flagged]
+        if choices:
+            x, y = random.choice(choices)
+            self.board.reveal_cell(x, y)
+
     
     def hard_turn(self):
         pass

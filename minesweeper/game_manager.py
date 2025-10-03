@@ -162,7 +162,7 @@ class GameManager:
             self.board.toggle_flag(x, y)
 
     def _bot_turn(self):
-        if self.board.is_game_over or self.board.is_game_won:
+        if self.board.is_game_over() or self.board.is_game_won():
             self.running = False
             return
         match self.difficulty:
@@ -174,6 +174,17 @@ class GameManager:
                 self.hard_turn()
             case _:
                 self.running = False
+
+
+    def ez_turn(self):
+        pass
+    
+    def med_turn(self):
+        pass
+    
+    def hard_turn(self):
+        pass
+
     
     def update(self):
         pass  

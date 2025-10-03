@@ -66,7 +66,7 @@ class BoardAdapter:
 class GameManager:
     """Manager: input -> board mutate -> render."""
     def __init__(self, width: int, height: int , num_mines: int, 
-                 cell_size: int, turn: str="human", alg_involvement: str="None", difficulty: str="Easy"):
+                 cell_size: int, alg_involvement: str="None", difficulty: str="Easy"):
         """
           Three newly added variables used to track turn/alg_involvement/difficulty, currently stored as strs as shown
           however this can change just used for easy placeholders for now
@@ -74,7 +74,7 @@ class GameManager:
           alg_involvement: str "None", "Assisted", "Full Auto" 
           difficulty: str "Easy", "Medium", "Hard"
         """
-        self.turn = turn
+        self.turn = "human" 
         self.alg_involvement = alg_involvement
         self.difficulty = difficulty
         self.board_width = width
@@ -224,7 +224,8 @@ class GameManager:
         while self.running:
             if self.turn == "human":
               self.handle_input()
-              self.turn = "bot"
+              if self.alg_involvement == "Assisted":
+                self.turn = "bot"
             else:
               self._bot_turn()
               self.turn = "human"

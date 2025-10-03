@@ -23,7 +23,7 @@ class ConfigScreen:
         color[self.selected_option] = (255, 255, 0)
 
         mine_text = self.font.render(f"Mines: {self.mineCount}", True, color[0])
-        ai_text = self.font.render(f"auto: {self.involve_level}", True, color[1])
+        ai_text = self.font.render(f"Alg Involvement: {self.involve_level}", True, color[1])
         complexity_text = self.font.render(f"Difficulty: {self.complexity}", True, color[2])
 
         self.screen.blit(mine_text, (50, 50))

@@ -15,6 +15,7 @@ Sources: (Carlos) Pygame Example Implementations of Minesweeper
 Multiple tutorials found at https://www.pygame.org/
 '''
 
+import time
 import pygame
 import sys
 import os
@@ -76,6 +77,7 @@ class GameManager:
         """
         self.alg_involvement = alg_involvement
         self.difficulty = difficulty
+        self.turn = "human"
         self.board_width = width
         self.board_height = height
         self.num_mines = num_mines
@@ -121,24 +123,26 @@ class GameManager:
         for event in events:
             if event.type == pygame.QUIT:
                 self.running = False
-                return
+                return False
             
             # Handle restart key (R)
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_r:
                     self.start_new_game()
+                    return False
                 elif event.key == pygame.K_ESCAPE:
                     self.running = False
+                    return False
 
         # Might not need lost/win check cause it is also done after so just added for robustness for now        
         if self.turn != "human" or self.board.lost() or self.board.won():
-            return
+            return False
 
         # Delegate input handling to InputHandler
         action = self.input_handler.handle_events(events)
         
         if action and not (self.board.lost() or self.board.won()):
-            self._process_game_action(action)
+            return self._process_game_action(action)
     
     def _process_game_action(self, action):
         """
@@ -149,7 +153,7 @@ class GameManager:
           handle_input and that turns their click into the x/y bit a bot would pass this value directly into this
         """
         if not action:
-            return
+            return False
         
         action_type = action.get('type')
         x = action.get('x', 0)
@@ -157,47 +161,27 @@ class GameManager:
         
         if action_type == 'reveal':
             self.board.reveal_cell(x, y)
+            return True
         elif action_type == 'flag':
             self.board.toggle_flag(x, y)
-
-    def _process_game_action_bot(self, action):
-        """
-        Process game actions from input handler
-        Can call directly to simulate a flag/reveal
-        Action: dict: { 'type': 'reveal'|'flag', 'x': int, 'y': int } or None
-          x and y are the grid col/row stored as an int, a player gets called to
-          handle_input and that turns their click into the x/y bit a bot would pass this value directly into this
-        """
-        if not action:
-            return
-        
-        action_type = action.get('type')
-        x = action.get('x', 0)
-        y = action.get('y', 0)
-        
-        if action_type == 'reveal':
-            self.board.reveal_cell(x, y)
-        elif action_type == 'flag':
-            self.board.toggle_flag(x, y)
-
-        if self.alg_involvement == "Assisted":
-            self._bot_turn()
+            return True
 
     def _bot_turn(self):
         print("Bot")
         if self.board.is_game_over() or self.board.is_game_won():
-            self.running = False
-            return
+          return False
         match self.difficulty:
-            case "Easy":
-                self.ez_turn()
-            case "Medium":
-                self.med_turn()
-            case "Hard":
-                self.hard_turn()
-            case _:
-                self.running = False
-
+          case "Easy":
+            return self.ez_turn()
+          case "Medium":
+            return self.med_turn()
+          case "Hard":
+            moved = self._pattern_121()
+            if moved:
+              return True
+            return self.med_turn()
+          case _:
+            return False
 
     def ez_turn(self):
         choices = [(x, y) for y in range(self.board.height)
@@ -207,8 +191,10 @@ class GameManager:
         
         if choices:
             x, y = random.choice(choices)
-            action = {"type": "flag", "x": x, "y": y}
-            self._process_game_action_bot(action)
+            action = {"type": "reveal", "x": x, "y": y}
+            return self._process_game_action(action)
+        else:
+            return False
     
     def med_turn(self):
         # Look for safe moves or mines
@@ -238,24 +224,16 @@ class GameManager:
                 if cell.count - flagged == len(unrevealed) and unrevealed:
                     ux, uy = random.choice(unrevealed)
                     action = {"type": "flag", "x": ux, "y": uy}
-                    self._process_game_action_bot(action) 
-                    return  
+                    return self._process_game_action(action) 
 
                 # all unrevealed must be safe → reveal one
                 if flagged == cell.count and unrevealed:
                     ux, uy = random.choice(unrevealed)
-                    action = {"type": "flag", "x": ux, "y": uy}
-                    self._process_game_action_bot(action) 
-                    return  
+                    action = {"type": "reveal", "x": ux, "y": uy}
+                    return self._process_game_action(action)   
 
         # Random guess (last ditch effort)
-        self.ez_turn()
-
-    
-    def hard_turn(self):
-        if self._pattern_121(): 
-            return
-        self.med_turn()
+        return self.ez_turn()
 
     # this looks for 1-2-1 patterns on the board
     # if a mine is found, flag it and return true, 
@@ -286,8 +264,7 @@ class GameManager:
                             candidate_cell = self.board.get_cell(mine_col, mine_row) 
                             if candidate_cell and not candidate_cell.flagged: 
                                 action = {"type": "flag", "x": mine_col, "y": mine_row}
-                                self._process_game_action_bot(action)  
-                                return True
+                                return self._process_game_action(action)  
                     
                     # check the covered row below this one
                     if row < grid_height - 1: 
@@ -299,8 +276,7 @@ class GameManager:
                             candidate_cell = self.board.get_cell(mine_col, mine_row) 
                             if candidate_cell and not candidate_cell.flagged: 
                                 action = {"type": "flag", "x": mine_col, "y": mine_row}
-                                self._process_game_action_bot(action)   
-                                return True
+                                return self._process_game_action(action)   
                             
         # looks for the vertical 1-2-1 pattern
         for row in range(1, grid_height - 1): 
@@ -324,8 +300,7 @@ class GameManager:
                             candidate_cell = self.board.get_cell(mine_col, mine_row) 
                             if candidate_cell and not candidate_cell.flagged: 
                                 action = {"type": "flag", "x": mine_col, "y": mine_row} 
-                                self._process_game_action_bot(action)  
-                                return True
+                                return self._process_game_action(action)  
 
                     # check the covered column to the right
                     if col < grid_width - 1:
@@ -337,14 +312,11 @@ class GameManager:
                             candidate_cell = self.board.get_cell(mine_col, mine_row) 
                             if candidate_cell and not candidate_cell.flagged: 
                                 action = {"type": "flag", "x": mine_col, "y": mine_row}
-                                self._process_game_action_bot(action)  
-                                return True       
+                                return self._process_game_action(action)  
         # no 1-2-1 pattern found
-        return False                              
-    
-    def update(self):
-        pass  
-    
+        return False
+
+
     def render(self):
         """Render the game using the Renderer."""
         # Clear screen
@@ -369,19 +341,29 @@ class GameManager:
         updates game state, and renders the game.
         """
         print("The Greatest Game of Minesweeper: LMB=reveal RMB=flag R=restart ESC=quit")
-        if self.alg_involvement == "Full Auto":
-            while self.running:
-              self._bot_turn()
-              self.update()
-              self.render()
-              self.clock.tick(60)
-            self.quit()
 
         while self.running:
-            self.handle_input()
-            self.update()
-            self.render()
-            self.clock.tick(60)
+            # Assisted Game
+            while self.running and not (self.board.lost() or self.board.won()):
+              if self.alg_involvement.lower() == "full auto":
+                  self._bot_turn()
+              elif self.alg_involvement.lower() == "assisted":
+                if self.turn.lower() == "human":
+                    moved = self.handle_input()
+                    if moved and not (self.board.lost() or self.board.won()):
+                        self.turn = "bot"
+                else:
+                    time.sleep(.25) # Just made as an artificial buffer between player -> bot turn, as python is single threaded this *might mess up given we have a timer/sfx or anything like that implemented
+                    moved = self._bot_turn()
+                    self.turn = "human"
+              else:
+                  self.handle_input()
+              self.render()
+              self.clock.tick(30)
+            while self.running and (self.board.lost() or self.board.won()):
+                self.handle_input()
+                self.render()
+                self.clock.tick(30)
         self.quit()
     
     def quit(self):

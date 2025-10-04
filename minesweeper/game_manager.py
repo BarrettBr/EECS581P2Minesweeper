@@ -229,13 +229,15 @@ class GameManager:
                 # all unrevealed must be mines → flag them
                 if cell.count - flagged == len(unrevealed) and unrevealed:
                     ux, uy = random.choice(unrevealed)
-                    self.board.toggle_flag(ux, uy)
+                    action = {"type": "flag", "x": ux, "y": uy}
+                    self._process_game_action_bot(action) 
                     return  
 
                 # all unrevealed must be safe → reveal one
                 if flagged == cell.count and unrevealed:
                     ux, uy = random.choice(unrevealed)
-                    self.board.reveal_cell(ux, uy)
+                    action = {"type": "flag", "x": ux, "y": uy}
+                    self._process_game_action_bot(action) 
                     return  
 
         # Random guess (last ditch effort)
@@ -245,7 +247,8 @@ class GameManager:
                            and not self.board.get_cell(x, y).flagged]
         if choices:
             x, y = random.choice(choices)
-            self.board.reveal_cell(x, y)
+            action = {"type": "flag", "x": x, "y": y}
+            self._process_game_action_bot(action) 
 
     
     def hard_turn(self):

@@ -252,7 +252,9 @@ class GameManager:
 
     
     def hard_turn(self):
-        pass
+        if self._pattern_121(): 
+            return
+        self.med_turn()
 
     # this looks for 1-2-1 patterns on the board
     # if a mine is found, flag it and return true, 

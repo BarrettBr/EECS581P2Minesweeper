@@ -160,6 +160,26 @@ class GameManager:
         elif action_type == 'flag':
             self.board.toggle_flag(x, y)
 
+    def _process_game_action_bot(self, action):
+        """
+        Process game actions from input handler
+        Can call directly to simulate a flag/reveal
+        Action: dict: { 'type': 'reveal'|'flag', 'x': int, 'y': int } or None
+          x and y are the grid col/row stored as an int, a player gets called to
+          handle_input and that turns their click into the x/y bit a bot would pass this value directly into this
+        """
+        if not action:
+            return
+        
+        action_type = action.get('type')
+        x = action.get('x', 0)
+        y = action.get('y', 0)
+        
+        if action_type == 'reveal':
+            self.board.reveal_cell(x, y)
+        elif action_type == 'flag':
+            self.board.toggle_flag(x, y)
+
         if self.alg_involvement == "Assisted":
             self._bot_turn()
 

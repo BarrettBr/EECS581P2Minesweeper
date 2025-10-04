@@ -200,7 +200,15 @@ class GameManager:
 
 
     def ez_turn(self):
-        pass
+        choices = [(x, y) for y in range(self.board.height)
+                           for x in range(self.board.width)
+                           if not self.board.get_cell(x, y).revealed
+                           and not self.board.get_cell(x, y).flagged]
+        
+        if choices:
+            x, y = random.choice(choices)
+            action = {"type": "flag", "x": x, "y": y}
+            self._process_game_action_bot(action)
     
     def med_turn(self):
         # Look for safe moves or mines

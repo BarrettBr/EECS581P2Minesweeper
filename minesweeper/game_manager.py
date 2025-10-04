@@ -279,7 +279,8 @@ class GameManager:
                             mine_col, mine_row = row_above[1]
                             candidate_cell = self.board.get_cell(mine_col, mine_row) 
                             if candidate_cell and not candidate_cell.flagged: 
-                                self.board.toggle_flag(mine_col, mine_row) 
+                                action = {"type": "flag", "x": mine_col, "y": mine_row}
+                                self._process_game_action_bot(action)  
                                 return True
                     
                     # check the covered row below this one
@@ -291,7 +292,8 @@ class GameManager:
                             mine_col, mine_row = row_below[1] 
                             candidate_cell = self.board.get_cell(mine_col, mine_row) 
                             if candidate_cell and not candidate_cell.flagged: 
-                                self.board.toggle_flag(mine_col, mine_row) 
+                                action = {"type": "flag", "x": mine_col, "y": mine_row}
+                                self._process_game_action_bot(action)   
                                 return True
                             
         # looks for the vertical 1-2-1 pattern
@@ -315,7 +317,8 @@ class GameManager:
                             mine_col, mine_row = to_left[1]
                             candidate_cell = self.board.get_cell(mine_col, mine_row) 
                             if candidate_cell and not candidate_cell.flagged: 
-                                self.board.toggle_flag(mine_col, mine_row) 
+                                action = {"type": "flag", "x": mine_col, "y": mine_row} 
+                                self._process_game_action_bot(action)  
                                 return True
 
                     # check the covered column to the right
@@ -327,7 +330,8 @@ class GameManager:
                             mine_col, mine_row = to_right[1]
                             candidate_cell = self.board.get_cell(mine_col, mine_row) 
                             if candidate_cell and not candidate_cell.flagged: 
-                                self.board.toggle_flag(mine_col, mine_row) 
+                                action = {"type": "flag", "x": mine_col, "y": mine_row}
+                                self._process_game_action_bot(action)  
                                 return True       
         # no 1-2-1 pattern found
         return False                              

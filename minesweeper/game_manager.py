@@ -231,6 +231,86 @@ class GameManager:
     def hard_turn(self):
         pass
 
+    # this looks for 1-2-1 patterns on the board
+    # if a mine is found, flag it and return true, 
+    # otherwise, return false
+    def _pattern_121(self): 
+        grid_height = self.board.height
+        grid_width = self.board.width
+
+        # looks for the horizontal 1-2-1 pattern
+        for row in range(grid_height):
+            for col in range(1, grid_width - 1): 
+                cell_left = self.board.get_cell(col - 1, row) 
+                cell_middle = self.board.get_cell(col, row)
+                cell_right = self.board.get_cell(col + 1, row) 
+                if not (cell_left and cell_middle and cell_right): 
+                    continue
+                if (cell_left.revealed and cell_left.count == 1 and
+                    cell_middle.revealed and cell_middle.count == 2 and 
+                    cell_right.revealed and cell_right.count == 1): 
+                    
+                    # check the covered row above this one
+                    if row > 0: 
+                        row_above = [(col - 1, row - 1), (col, row - 1), (col + 1, row - 1)]
+                        hidden_cells = all(not self.board.get_cell(c, r).revealed for c, r in row_above) 
+
+                        if hidden_cells: 
+                            mine_col, mine_row = row_above[1]
+                            candidate_cell = self.board.get_cell(mine_col, mine_row) 
+                            if candidate_cell and not candidate_cell.flagged: 
+                                self.board.toggle_flag(mine_col, mine_row) 
+                                return True
+                    
+                    # check the covered row below this one
+                    if row < grid_height - 1: 
+                        row_below = [(col - 1, row + 1), (col, row + 1), (col + 1, row + 1)] 
+                        hidden_cells = all(not self.board.get_cell(c, r).revealed for c, r in row_below)
+                        
+                        if hidden_cells: 
+                            mine_col, mine_row = row_below[1] 
+                            candidate_cell = self.board.get_cell(mine_col, mine_row) 
+                            if candidate_cell and not candidate_cell.flagged: 
+                                self.board.toggle_flag(mine_col, mine_row) 
+                                return True
+                            
+        # looks for the vertical 1-2-1 pattern
+        for row in range(1, grid_height - 1): 
+            for col in range(grid_width): 
+                cell_top = self.board.get_cell(col, row - 1)
+                cell_middle = self.board.get_cell(col, row)
+                cell_bottom = self.board.get_cell(col, row + 1)
+                if not (cell_bottom and cell_middle and cell_top): 
+                    continue
+                if (cell_top.revealed and cell_top.count == 1 and 
+                    cell_middle.revealed and cell_middle.count == 2 and 
+                    cell_bottom.revealed and cell_bottom.count == 1): 
+
+                    # check the covered column to the left
+                    if col > 0: 
+                        to_left = [(col - 1, row - 1), (col - 1, row), (col - 1, row + 1)]
+                        hidden_cells = all(not self.board.get_cell(c, r).revealed for c, r in to_left)
+                        
+                        if hidden_cells: 
+                            mine_col, mine_row = to_left[1]
+                            candidate_cell = self.board.get_cell(mine_col, mine_row) 
+                            if candidate_cell and not candidate_cell.flagged: 
+                                self.board.toggle_flag(mine_col, mine_row) 
+                                return True
+
+                    # check the covered column to the right
+                    if col < grid_width - 1:
+                        to_right = [(col + 1, row - 1), (col + 1, row), (col + 1, row + 1)] 
+                        hidden_cells = all(self.board.get_cell(c, r).revealed for c, r in to_right)
+
+                        if hidden_cells: 
+                            mine_col, mine_row = to_right[1]
+                            candidate_cell = self.board.get_cell(mine_col, mine_row) 
+                            if candidate_cell and not candidate_cell.flagged: 
+                                self.board.toggle_flag(mine_col, mine_row) 
+                                return True       
+        # no 1-2-1 pattern found
+        return False                              
     
     def update(self):
         pass  

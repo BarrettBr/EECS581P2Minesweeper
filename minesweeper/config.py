@@ -1,6 +1,34 @@
 import pygame
+# Authors: Adam berry
+# Creation Date: October 3
+# 
+# Description:
+#   This file holds the configuration screen that shows before the game starts.
+#   it is entirely self contained, including spinning up its own pygame completely seperate to the rest
+#   If done well it should have no side effect anywhere else in the code except for the return values
+#  Functions:
+#       Init:
+#           initializes the self contained pygame scene
+#       
+#       Draw UI:
+#           Draws all of the screen element every frame
+#       handle_input:
+#           Catches the user's input and updates the screen accordingly
+#       modify_selected_option
+#           A helper function for handle_input that changes the state for handle_input
+#       run
+#           Contains the other functions and the main game loop.
+#           this is the function that returns the usable values
+#   
+#       Inputs:
+#           User input: up, down, left, right, enter
+#
+#       Outputs:
+#           Mine count, AI Difficulty level, ai involvement level
 
+# Class to contain all of the config screen 
 class ConfigScreen:
+    # Initialize the pygame instance and any constants/variables
     def __init__(self):
         pygame.init()
         self.screen = pygame.display.set_mode((500, 300))
@@ -17,6 +45,7 @@ class ConfigScreen:
 
         self.selected_option = 0
 
+    # Function that draws all on screen elements per frame, updates with state
     def draw_ui(self):
         self.screen.fill((30, 30, 30))
         color = [(200, 200, 200)] * 3
@@ -37,6 +66,7 @@ class ConfigScreen:
 
         pygame.display.flip()
 
+    # Catches the users input and routes it appropriately
     def handle_input(self, event):
         if event.type == pygame.KEYDOWN:
             if event.key in [pygame.K_RETURN, pygame.K_ESCAPE]:
@@ -49,6 +79,7 @@ class ConfigScreen:
                 self.modify_selected_option(event.key)
         return True
 
+    # Changes the actual value on a left/right arrow
     def modify_selected_option(self, key):
         if self.selected_option == 0:  # mine count 
             if key == pygame.K_LEFT:
@@ -70,6 +101,7 @@ class ConfigScreen:
                 idx = (idx + 1) % len(self.alg_complexity)
             self.complexity = self.alg_complexity[idx]
 
+    # The top level function that contains the game loop
     def run(self):
         running = True
         while running:

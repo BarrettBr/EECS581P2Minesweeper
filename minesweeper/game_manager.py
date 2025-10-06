@@ -78,6 +78,7 @@ class GameManager:
         self.alg_involvement = alg_involvement
         self.difficulty = difficulty
         self.turn = "human"
+        self.start_time = time.time()
         self.board_width = width
         self.board_height = height
         self.num_mines = num_mines
@@ -115,6 +116,7 @@ class GameManager:
     def start_new_game(self):
         core_board = Board(self.board_height, self.board_width, self.num_mines)
         self.board = BoardAdapter(core_board)
+        self.start_time = time.time() # Used to reset the start time upon starting a new game
     
     def handle_input(self):
         """Handle all input events through the InputHandler."""
@@ -124,7 +126,7 @@ class GameManager:
             if event.type == pygame.QUIT:
                 self.running = False
                 return False
-            
+
             # Handle restart key (R)
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_r:
@@ -140,7 +142,7 @@ class GameManager:
 
         # Delegate input handling to InputHandler
         action = self.input_handler.handle_events(events)
-        
+
         if action and not (self.board.lost() or self.board.won()):
             return self._process_game_action(action)
     
@@ -166,16 +168,25 @@ class GameManager:
             self.board.toggle_flag(x, y)
             return True
 
+    """
+    Helper function that passes to the ez/med/hard func that controls it's turn,
+    will return True/False from those functions to run to see if a turn was played or not so as to not flip turn needlisly
+
+    Inputs: Nothing
+    Output: Bool on whether a turn was played
+    """
     def _bot_turn(self):
-        print("Bot")
+        # Base case to make sure we actually need to do a turn vs the game is done already
         if self.board.is_game_over() or self.board.is_game_won():
           return False
+        # Switch statement that passes to the functions needed
         match self.difficulty:
           case "Easy":
             return self.ez_turn()
           case "Medium":
             return self.med_turn()
           case "Hard":
+            # Does a pattern _121 move and if it isn't done then returns to a medium turn algo instead
             moved = self._pattern_121()
             if moved:
               return True
@@ -183,18 +194,22 @@ class GameManager:
           case _:
             return False
 
+    """
+    Function that does the easy algorithm i.e: Choose a random cell and uncover it at random
+    """
     def ez_turn(self):
+        # Creates a list of all possible x/y values this board could have
         choices = [(x, y) for y in range(self.board.height)
                            for x in range(self.board.width)
                            if not self.board.get_cell(x, y).revealed
                            and not self.board.get_cell(x, y).flagged]
-        
+        # Makes sure there is a choice to make
         if choices:
-            x, y = random.choice(choices)
-            action = {"type": "reveal", "x": x, "y": y}
-            return self._process_game_action(action)
+            x, y = random.choice(choices) # Choose a random tuple from the choice and assign it to var x/y
+            action = {"type": "reveal", "x": x, "y": y} # Create the dict object for the action needed
+            return self._process_game_action(action) # Send this action to be processed/reflected on main board
         else:
-            return False
+            return False # If no choice can be made we return False for no turn played
     
     def med_turn(self):
         # Look for safe moves or mines
@@ -236,7 +251,7 @@ class GameManager:
         return self.ez_turn()
 
     # this looks for 1-2-1 patterns on the board
-    # if a mine is found, flag it and return true, 
+    # if a mine is found, flag it and return true,
     # otherwise, return false
     def _pattern_121(self): 
         grid_height = self.board.height
@@ -329,6 +344,16 @@ class GameManager:
             self.renderer.render_game_over(won=True)
         elif self.board.lost():
             self.renderer.render_game_over(won=False)
+
+        # Setup/display timer like they did on renderer but we just put it here for easy access to self.start_time
+        y_value = self.board.height * self.cell_size + 55
+        timer_font = pygame.font.SysFont("arial", 15, bold=True) # Copied from font_flag_counter
+        elapsed_time = int(time.time() - self.start_time) # Cheap way to see time from start regardless of single core time.sleep() pauses
+        timer_surface = timer_font.render(f"Time: {elapsed_time}s", True, (0, 0, 0)) # Text/Antialiasing/color they just had every text set as True so I matched it
+
+        # Places/renders timer, (Text/Color object, (x,y) value)
+        self.screen.blit(timer_surface, (10, y_value))
+
         
         # Update display
         pygame.display.flip()
@@ -347,6 +372,7 @@ class GameManager:
             while self.running and not (self.board.lost() or self.board.won()):
               if self.alg_involvement.lower() == "full auto":
                   self._bot_turn()
+                  time.sleep(.33)
               elif self.alg_involvement.lower() == "assisted":
                 if self.turn.lower() == "human":
                     moved = self.handle_input()

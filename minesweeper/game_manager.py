@@ -112,11 +112,15 @@ class GameManager:
         self.board = BoardAdapter(core_board)
         self.input_handler = InputHandler(cell_size=self.cell_size, board_offset_y=0)
         self.renderer = Renderer(self.screen, self.cell_size)
+        self.sfx_win = pygame.mixer.Sound(os.path.join(os.path.dirname(__file__), "sfx", "win.mp3"))
+        self.sfx_lost = pygame.mixer.Sound(os.path.join(os.path.dirname(__file__), "sfx", "lost.mp3"))
+        self.sfx_played = False
     
     def start_new_game(self):
         core_board = Board(self.board_height, self.board_width, self.num_mines)
         self.board = BoardAdapter(core_board)
         self.start_time = time.time() # Used to reset the start time upon starting a new game
+        self.sfx_played = False # Used to reset the ability to play a new SFX
     
     def handle_input(self):
         """Handle all input events through the InputHandler."""
@@ -342,8 +346,16 @@ class GameManager:
         
         if self.board.won():
             self.renderer.render_game_over(won=True)
+            # Just check to ensure not spamming the user
+            if not self.sfx_played:
+                self.sfx_win.play() # Play the win SFX
+                self.sfx_played = True
         elif self.board.lost():
             self.renderer.render_game_over(won=False)
+            # Just check to ensure not spamming the user
+            if not self.sfx_played:
+                self.sfx_lost.play() # Play the lost SFX
+                self.sfx_played = True
 
         # Setup/display timer like they did on renderer but we just put it here for easy access to self.start_time
         y_value = self.board.height * self.cell_size + 55

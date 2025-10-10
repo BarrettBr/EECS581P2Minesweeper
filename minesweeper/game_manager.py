@@ -64,7 +64,6 @@ class BoardAdapter:
     def won(self) -> bool:
         return self._core.state == BoardGameState.WON
 
-
 class GameManager:
     """Manager: input -> board mutate -> render."""
     def __init__(self, width: int, height: int , num_mines: int, 
@@ -87,6 +86,7 @@ class GameManager:
         self.padding_bottom = 80
         self.screen_width = width * cell_size + self.padding_right
         self.screen_height = height * cell_size + self.padding_bottom
+        self.arr = []
 
         pygame.init()
         self.screen = pygame.display.set_mode((self.screen_width, self.screen_height))
@@ -282,9 +282,14 @@ class GameManager:
                             mine_col, mine_row = row_above[1]
                             candidate_cell = self.board.get_cell(mine_col, mine_row) 
                             if candidate_cell and not candidate_cell.flagged: 
-                                action = {"type": "flag", "x": mine_col, "y": mine_row}
-                                return self._process_game_action(action)  
-                    
+                                action1 = {"type": "flag", "x": mine_col - 1, "y": mine_row}
+                                action2 = {"type": "flag", "x": mine_col + 1, "y": mine_row}
+                                if ((mine_col - 1, mine_row) in self.arr) and ((mine_col + 1, mine_row) in self.arr):
+                                    return False
+                                self.arr.append((mine_col - 1, mine_row)) 
+                                self.arr.append((mine_col + 1, mine_row))
+                                return self._process_game_action(action1) or self._process_game_action(action2)
+
                     # check the covered row below this one
                     if row < grid_height - 1: 
                         row_below = [(col - 1, row + 1), (col, row + 1), (col + 1, row + 1)] 
@@ -294,8 +299,13 @@ class GameManager:
                             mine_col, mine_row = row_below[1] 
                             candidate_cell = self.board.get_cell(mine_col, mine_row) 
                             if candidate_cell and not candidate_cell.flagged: 
-                                action = {"type": "flag", "x": mine_col, "y": mine_row}
-                                return self._process_game_action(action)   
+                                action1 = {"type": "flag", "x": mine_col - 1, "y": mine_row}
+                                action2 = {"type": "flag", "x": mine_col + 1, "y": mine_row}
+                                if ((mine_col - 1, mine_row) in self.arr) and ((mine_col + 1, mine_row) in self.arr):
+                                    return False
+                                self.arr.append((mine_col - 1, mine_row)) 
+                                self.arr.append((mine_col + 1, mine_row))
+                                return self._process_game_action(action1) or self._process_game_action(action2)
                             
         # looks for the vertical 1-2-1 pattern
         for row in range(1, grid_height - 1): 
@@ -318,8 +328,13 @@ class GameManager:
                             mine_col, mine_row = to_left[1]
                             candidate_cell = self.board.get_cell(mine_col, mine_row) 
                             if candidate_cell and not candidate_cell.flagged: 
-                                action = {"type": "flag", "x": mine_col, "y": mine_row} 
-                                return self._process_game_action(action)  
+                                action1 = {"type": "flag", "x": mine_col, "y": mine_row - 1} 
+                                action2 = {"type": "flag", "x": mine_col, "y": mine_row + 1}
+                                if ((mine_col, mine_row - 1) in self.arr) and ((mine_col + 1, mine_row + 1) in self.arr):
+                                    return False
+                                self.arr.append((mine_col, mine_row - 1)) 
+                                self.arr.append((mine_col, mine_row + 1))
+                                return self._process_game_action(action1) or self._process_game_action(action2)
 
                     # check the covered column to the right
                     if col < grid_width - 1:
@@ -330,8 +345,13 @@ class GameManager:
                             mine_col, mine_row = to_right[1]
                             candidate_cell = self.board.get_cell(mine_col, mine_row) 
                             if candidate_cell and not candidate_cell.flagged: 
-                                action = {"type": "flag", "x": mine_col, "y": mine_row}
-                                return self._process_game_action(action)  
+                                action1 = {"type": "flag", "x": mine_col, "y": mine_row - 1}
+                                action2 = {"type": "flag", "x": mine_col, "y": mine_row + 1}
+                                if ((mine_col, mine_row - 1) in self.arr) and ((mine_col, mine_row + 1) in self.arr):
+                                    return False
+                                self.arr.append((mine_col, mine_row - 1)) 
+                                self.arr.append((mine_col, mine_row + 1))
+                                return self._process_game_action(action1) or self._process_game_action(action2)
         # no 1-2-1 pattern found
         return False
 
